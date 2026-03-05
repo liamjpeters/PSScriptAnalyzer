@@ -173,6 +173,15 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                             lParenSkippedIndentation.Push(true);
                             break;
                         }
+
+                        // When an LParen is followed by another indentation-increasing token on the same line,
+                        // let that token handle the indentation increase to prevent double indentation.
+                        if (HasIndentationIncreasingTokenOnSameLine(tokens, tokenIndex))
+                        {
+                            lParenSkippedIndentation.Push(true);
+                            break;
+                        }
+
                         lParenSkippedIndentation.Push(false);
                         indentationLevel++;
                         break;
@@ -296,6 +305,25 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
             }
 
             return diagnosticRecords;
+        }
+
+        private static bool HasIndentationIncreasingTokenOnSameLine(Token[] tokens, int startIndex)
+        {
+            for (int i = startIndex + 1; i < tokens.Length; i++)
+            {
+                var kind = tokens[i].Kind;
+                if (kind == TokenKind.NewLine || kind == TokenKind.LineContinuation || kind == TokenKind.EndOfInput)
+                {
+                    return false;
+                }
+
+                if (kind == TokenKind.AtCurly || kind == TokenKind.LCurly || 
+                    kind == TokenKind.AtParen || kind == TokenKind.DollarParen)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static Token NextTokenIgnoringComments(Token[] tokens, int startIndex)
