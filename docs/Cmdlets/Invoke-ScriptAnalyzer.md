@@ -536,7 +536,8 @@ Valid values are:
 
 - Error
 - Warning
-- Information.
+- Information
+- ParseError
 
 You can specify one ore more severity values.
 
